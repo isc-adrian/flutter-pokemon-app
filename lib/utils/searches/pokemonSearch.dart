@@ -1,5 +1,5 @@
 import 'package:app/models/persistence/pokemon.dart';
-import 'package:app/views/pokemones/PokemonCardView.dart';
+import 'package:app/views/pokemones/pokemonCardView.dart';
 import 'package:flutter/material.dart';
 
 class PokemonSearch extends SearchDelegate<Pokemon>{

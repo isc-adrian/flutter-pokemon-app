@@ -1,8 +1,9 @@
 import 'package:app/models/persistence/pokemon.dart';
 import 'package:app/services/pokemonesService.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../pokemonDetail.dart';
+import '../pokemon/pokemonDetail.dart';
 
 class PokemonCardView extends StatelessWidget {
 
@@ -28,7 +29,19 @@ class PokemonCardView extends StatelessWidget {
                 Container(
                   height: 100.0,
                   width: 100.0,
-                  decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(pokemon.img),),),
+                  child: CachedNetworkImage(
+                    imageUrl: pokemon.img,
+                    imageBuilder: (context, imageProvider) => Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Icon(Icons.error),
+                  ),
                 ),
                 Text("${pokemon.num} - ${pokemon.name}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
               ],

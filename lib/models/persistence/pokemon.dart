@@ -3,7 +3,7 @@ class Pokemon {
   String num;
   String name;
   String img;
-  List<Type> type;
+  List<Type> type = List<Type>();
   String height;
   String weight;
   String candy;
@@ -13,16 +13,16 @@ class Pokemon {
   String avgSpawns;
   String spawnTime;
   List<double> multipliers;
-  List<Type> weaknesses;
-  List<Evolution> nextEvolution;
-  List<Evolution> prevEvolution;
+  List<Type> weaknesses = List<Type>();
+  List<Evolution> nextEvolution = List<Evolution>();
+  List<Evolution> prevEvolution = List<Evolution>();
 
   Pokemon({
     this.id,
     this.num,
     this.name,
     this.img,
-    this.type,
+    this.type = const [],
     this.height,
     this.weight,
     this.candy,
@@ -32,18 +32,18 @@ class Pokemon {
     this.avgSpawns,
     this.spawnTime,
     this.multipliers,
-    this.weaknesses,
-    this.nextEvolution,
-    this.prevEvolution,
+    this.weaknesses = const [],
+    this.nextEvolution = const [],
+    this.prevEvolution = const [],
   });
 
-  factory Pokemon.fromJson(Map<String, dynamic> json) => Pokemon(
+  factory Pokemon.fromMap(Map<String, dynamic> json) => Pokemon(
     id: json["id"],
     num: json["num"],
-    name: json["name"],
+    name: json["name"].toString().replaceAll("'", ""),
     img: json["img"],
 //    type: json['type'] == null ? List<String>() : json['type'].cast<String>(),
-    type: json['type'] == null ? List<Type>() : List<Type>.from(json["weaknesses"].map((x) => typeValues.map[x])),
+    type: json['type'] == null ? List<Type>() : List<Type>.from(json["type"].map((x) => typeValues.map[x])),
     height: json["height"],
     weight: json["weight"],
     candy: json["candy"],
@@ -59,7 +59,7 @@ class Pokemon {
     prevEvolution: json["prev_evolution"] == null ? List<Evolution>() : List<Evolution>.from(json["prev_evolution"].map((x) => Evolution.fromJson(x))),
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toMap() => {
     "id": id,
     "num": num,
     "name": name,
