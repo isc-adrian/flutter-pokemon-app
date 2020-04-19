@@ -1,4 +1,5 @@
 import 'package:app/models/persistence/pokemon.dart';
+import 'package:app/repository/pokemonTypesRepository.dart';
 import 'package:app/utils/database/myDataBase.dart';
 
 import '../utils/database/tables/pokemonesTable.dart';
@@ -30,11 +31,16 @@ class PokemonRepository{
     var table = await source;
     for(Pokemon pokemon in pokemones){
       await table.save(pokemon);
+      PokemonTypesRepository.saveAll(pokemon.id, pokemon.type);
     }
   }
 
   static Future<List<Pokemon>> getAll() async{
     var table = await source;
-    return await table.getPokemones();
-}
+    List<Pokemon> pokemones = await table.getAll();
+    for(Pokemon pokemon in pokemones){
+      pokemon.type = await PokemonTypesRepository.getTypesByPokemon(pokemon.id);
+    }
+    return pokemones;
+  }
 }
