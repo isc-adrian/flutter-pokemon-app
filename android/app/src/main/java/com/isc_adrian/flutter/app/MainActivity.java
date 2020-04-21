@@ -1,4 +1,4 @@
-package com.jarov.flutter.app;
+package com.isc_adrian.flutter.app;
 
 import android.support.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity;

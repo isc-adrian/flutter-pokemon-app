@@ -5,7 +5,7 @@ import 'package:app/models/persistence/pokemon.dart';
 
 class PokemonesService {
 
-  final String URL = "https://raw.githubusercontent.com/Biuni/PokemonGO-Pokedex/master/pokedex.json";
+  static const String URL = "https://raw.githubusercontent.com/Biuni/PokemonGO-Pokedex/master/pokedex.json";
 
   Future<List<Pokemon>> getPokemones() async{
     try{

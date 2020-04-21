@@ -1,5 +1,4 @@
 import 'package:app/models/persistence/pokemon.dart';
-import 'package:app/services/pokemonesService.dart';
 import 'package:app/views/pokemon/pokemonCardViewDetail.dart';
 import 'package:flutter/material.dart';
 

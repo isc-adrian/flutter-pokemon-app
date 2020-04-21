@@ -1,7 +1,7 @@
 import 'package:app/models/persistence/pokemon.dart';
+import 'package:app/utils/database/myDataBase.dart';
 import 'package:app/utils/database/tables/tableDataBase.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:flutter/material.dart';
 
 class PokemonesTable extends TableDataBase{
 
@@ -14,37 +14,40 @@ class PokemonesTable extends TableDataBase{
   static const String HEIGHT = "height";
   static const String WEIGHT = "weight";
 
-  PokemonesTable({rootPath, dbName, dbVersion}): super(rootPath: rootPath, dbName: dbName, dbVersion: dbVersion);
+  final MyDataBase myDataBase;
+
+  PokemonesTable({@required this.myDataBase, @required dbVersion}): super(dbVersion: dbVersion);
 
   String getTableNameVersion(){
-    return """${TABLE_NAME}_${dbVersion}""";
+    return "${TABLE_NAME}_$dbVersion";
   }
 
   @override
-  create(Database db, int version) async{
-    String sqlQuery = "CREATE TABLE IF NOT EXISTS ${getTableNameVersion()} (${ID} INTEGER PRIMARY KEY, ${NUM} TEXT NOT NULL DEFAULT '', ${NAME} TEXT NOT NULL DEFAULT '', ${IMG} TEXT NOT NULL DEFAULT '', ${HEIGHT} TEXT NOT NULL DEFAULT '0.0', ${WEIGHT} TEXT NOT NULL DEFAULT '0.0'); ";
-    await db.execute(sqlQuery);
+  String createSchemaQuery(int version) {
+    return "CREATE TABLE IF NOT EXISTS ${TABLE_NAME}_$version ($ID INTEGER PRIMARY KEY, $NUM TEXT NOT NULL DEFAULT '', $NAME TEXT NOT NULL DEFAULT '', $IMG TEXT NOT NULL DEFAULT '', $HEIGHT TEXT NOT NULL DEFAULT '0.0', $WEIGHT TEXT NOT NULL DEFAULT '0.0'); ";
   }
 
   @override
-  update(Database db, int oldVersion, int newVersion) async {
-    await create(db, newVersion);
+  String dropSchemaQuery(int version){
+    return "DROP TABLE IF EXISTS ${TABLE_NAME}_$version";
   }
 
-  Future<int> save(Pokemon pokemon) async {
-    var dbClient = await db;
-    /*pokemon.id = await dbClient.insert(TABLE_NAME, pokemon.toMap());
-    return pokemon;*/
+  @override
+  String cleanDataQuery(int version){
+    return "DELETE FROM ${TABLE_NAME}_$version";
+  }
+
+  Future<void> save(Pokemon pokemon) async {
+    var dbClient = await myDataBase.getDataBase();
     await dbClient.transaction((trans) async {
-      var query = "INSERT OR IGNORE INTO ${getTableNameVersion()} (${ID}, ${NUM}, ${NAME}, ${IMG}, ${HEIGHT}, ${WEIGHT}) VALUES (${pokemon.id}, '${pokemon.num}', '${pokemon.name}', '${pokemon.img}', '${pokemon.height}', '${pokemon.weight}')";
+      var query = "INSERT OR IGNORE INTO ${getTableNameVersion()} ($ID, $NUM, $NAME, $IMG, $HEIGHT, $WEIGHT) VALUES (${pokemon.id}, '${pokemon.num}', '${pokemon.name}', '${pokemon.img}', '${pokemon.height}', '${pokemon.weight}')";
       return await trans.rawInsert(query);
     });
   }
 
   Future<List<Pokemon>> getAll() async {
-    var dbClient = await db;
-    //List<Map> maps = await dbClient.query(TABLE_NAME, columns: [ID, NAME]);
-    List<Map> maps = await dbClient.rawQuery("SELECT ${ID}, ${NUM}, ${NAME}, ${IMG}, ${HEIGHT}, ${WEIGHT} FROM ${getTableNameVersion()}");
+    var dbClient = await myDataBase.getDataBase();
+    List<Map> maps = await dbClient.rawQuery("SELECT $ID, $NUM, $NAME, $IMG, $HEIGHT, $WEIGHT FROM ${getTableNameVersion()}");
     return List.generate(maps.length, (int index){
       Map map = maps[index];
       return Pokemon(

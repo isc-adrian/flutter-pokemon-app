@@ -1,5 +1,4 @@
 import 'package:app/models/persistence/pokemon.dart';
-import 'package:app/services/pokemonesService.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +6,7 @@ import '../pokemon/pokemonDetail.dart';
 
 class PokemonCardView extends StatelessWidget {
 
-  Pokemon pokemon;
+  final Pokemon pokemon;
 
   PokemonCardView({this.pokemon});
 

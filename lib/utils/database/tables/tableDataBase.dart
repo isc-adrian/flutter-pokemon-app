@@ -1,45 +1,18 @@
-import 'dart:async';
-
-import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-
 abstract class TableDataBase{
 
-  Database _db;
+  final int dbVersion;
 
-  final String rootPath;
-  final String dbName;
-  int dbVersion;
+  TableDataBase({this.dbVersion});
 
-  TableDataBase({this.rootPath, this.dbName, this.dbVersion});
-
-  Future<Database> get db async {
-    if (_db != null) {
-      return _db;
-    }
-    _db = await _init();
-    return _db;
+  String createSchemaQuery(int version){
+    return "";
   }
 
-  _init() async{
-    String path = join(rootPath, dbName);
-    var db = await openDatabase(path
-        , version: dbVersion
-        , onCreate: create
-        , onUpgrade: update
-    );
-    return db;
+  String dropSchemaQuery(int version){
+    return "";
   }
 
-  @protected
-  create(Database db, int version) async {}
-
-  @protected
-  update(Database db, int oldVersion, int newVersion) async {}
-
-  Future close() async {
-    var dbClient = await db;
-    dbClient.close();
+  String cleanDataQuery(int version){
+    return "";
   }
 }

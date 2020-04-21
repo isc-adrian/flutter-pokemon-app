@@ -1,12 +1,12 @@
 import 'package:app/models/persistence/pokemon.dart';
-import 'package:app/repository/pokemonTypesRepository.dart';
+import 'package:app/sources/pokemonNextEvolutionsSource.dart';
+import 'package:app/sources/pokemonTypesSource.dart';
+import 'package:app/sources/pokemonWeaknessesSource.dart';
 import 'package:app/utils/database/myDataBase.dart';
 
 import '../utils/database/tables/pokemonesTable.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io' as io;
 
-class PokemonRepository{
+class PokemonSource {
 
   static PokemonesTable _source;
 
@@ -19,19 +19,16 @@ class PokemonRepository{
   }
 
   static _init() async{
-    io.Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    PokemonesTable pokemonesTable = new PokemonesTable(
-        rootPath: documentsDirectory.path
-        , dbName: MyDataBase.NAME
-        , dbVersion: MyDataBase.VERSION);
-    return pokemonesTable;
+    return new PokemonesTable(myDataBase: new MyDataBase(), dbVersion: MyDataBase.VERSION);
   }
 
   static Future<void> saveAll(List<Pokemon> pokemones) async{
     var table = await source;
     for(Pokemon pokemon in pokemones){
       await table.save(pokemon);
-      PokemonTypesRepository.saveAll(pokemon.id, pokemon.type);
+      await PokemonTypesSource.saveAll(pokemon.id, pokemon.type);
+      await PokemonWeaknessesSource.saveAll(pokemon.id, pokemon.weaknesses);
+      await PokemonNextEvolutionsSource.saveAll(pokemon.id, pokemon.nextEvolution);
     }
   }
 
@@ -39,7 +36,9 @@ class PokemonRepository{
     var table = await source;
     List<Pokemon> pokemones = await table.getAll();
     for(Pokemon pokemon in pokemones){
-      pokemon.type = await PokemonTypesRepository.getTypesByPokemon(pokemon.id);
+      pokemon.type = await PokemonTypesSource.getByPokemon(pokemon.id);
+      pokemon.weaknesses = await PokemonWeaknessesSource.getByPokemon(pokemon.id);
+      pokemon.nextEvolution = await PokemonNextEvolutionsSource.getByPokemon(pokemon.id);
     }
     return pokemones;
   }

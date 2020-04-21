@@ -1,8 +1,6 @@
-import 'package:app/models/persistence/pokemon.dart';
+import 'package:app/utils/database/myDataBase.dart';
 import 'package:app/utils/database/tables/tableDataBase.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 
 class PokemonTypesTable extends TableDataBase{
 
@@ -11,37 +9,40 @@ class PokemonTypesTable extends TableDataBase{
   static const String ID_POKEMON = "idPokemon";
   static const String TYPE = "type";
 
-  PokemonTypesTable({rootPath, dbName, dbVersion}) : super(rootPath: rootPath, dbName: dbName, dbVersion: dbVersion);
+  final MyDataBase myDataBase;
+
+  PokemonTypesTable({@required this.myDataBase, @required dbVersion}): super(dbVersion: dbVersion);
 
   String getTableNameVersion(){
-    return """${TABLE_NAME}_${dbVersion}""";
+    return "${TABLE_NAME}_$dbVersion";
   }
 
   @override
-  create(Database db, int version) async{
-    String sqlQuery = "CREATE TABLE IF NOT EXISTS ${getTableNameVersion()} (${ID_POKEMON} INTEGER, ${TYPE} TEXT NOT NULL DEFAULT ''); ";
-    await db.execute(sqlQuery);
+  String createSchemaQuery(int version) {
+    return "CREATE TABLE IF NOT EXISTS ${TABLE_NAME}_$version ($ID_POKEMON INTEGER, $TYPE TEXT NOT NULL DEFAULT '', PRIMARY KEY ($ID_POKEMON, $TYPE)); ";
   }
 
   @override
-  update(Database db, int oldVersion, int newVersion) async {
-    await create(db, newVersion);
+  String dropSchemaQuery(int version){
+    return "DROP TABLE IF EXISTS ${TABLE_NAME}_$version";
   }
 
-  Future<int> save(int idPokemon, String type) async{
-    var dbClient = await db;
-    /*pokemon.id = await dbClient.insert(TABLE_NAME, pokemon.toMap());
-    return pokemon;*/
+  @override
+  String cleanDataQuery(int version){
+    return "DELETE FROM ${TABLE_NAME}_$version";
+  }
+
+  Future<void> save(int idPokemon, String type) async{
+    var dbClient = await myDataBase.getDataBase();
     await dbClient.transaction((trans) async {
-      var query = "INSERT OR IGNORE INTO ${getTableNameVersion()} (${ID_POKEMON}, ${TYPE}) VALUES (${idPokemon}, '${type}')";
+      var query = "INSERT OR IGNORE INTO ${getTableNameVersion()} ($ID_POKEMON, $TYPE) VALUES ($idPokemon, '$type')";
       return await trans.rawInsert(query);
     });
   }
 
   Future<List<String>> getByPokemon(int idPokemon) async {
-    var dbClient = await db;
-    //List<Map> maps = await dbClient.query(TABLE_NAME, columns: [ID, NAME]);
-    List<Map> maps = await dbClient.rawQuery("SELECT ${TYPE} FROM ${getTableNameVersion()} WHERE ${ID_POKEMON} = ${idPokemon}");
+    var dbClient = await myDataBase.getDataBase();
+    List<Map> maps = await dbClient.rawQuery("SELECT $TYPE FROM ${getTableNameVersion()} WHERE $ID_POKEMON = $idPokemon");
     return List.generate(maps.length, (int index){
       Map map = maps[index];
       return map[TYPE];

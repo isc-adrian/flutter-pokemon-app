@@ -1,6 +1,7 @@
 import 'package:app/models/persistence/pokemon.dart';
-import 'package:app/repository/pokemonRepository.dart';
 import 'package:app/services/pokemonesService.dart';
+import 'package:app/sources/pokemonSource.dart';
+import 'package:app/utils/database/myDataBase.dart';
 import 'package:app/views/pokemones/pokemonCardView.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:empty_widget/empty_widget.dart';
@@ -29,7 +30,20 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    initialize();
     fetchData();
+  }
+
+  initialize() async{
+    /*io.Directory dir = io.Directory("/storage/emulated/0/pokemonApp");
+    dir.exists().then((exist) {
+      if(!exist){
+        dir.create(recursive: true);
+      }
+    });*/
+
+    MyDataBase myDataBase = new MyDataBase();
+    myDataBase.createDataBase();
   }
 
   Future<bool> canConnectToInternet() async {
@@ -50,11 +64,11 @@ class _HomePageState extends State<HomePage> {
         this.setState((){
           pokemones = pokemonesFromService;
           pokemonesFiltered = pokemones;
-          PokemonRepository.saveAll(pokemones);
+          PokemonSource.saveAll(pokemones);
         })
       });
     } else {
-      PokemonRepository.getAll().then((pokemonList) {
+      PokemonSource.getAll().then((pokemonList) {
         this.setState((){
           pokemones = pokemonList;
           pokemonesFiltered = pokemones;
@@ -167,7 +181,7 @@ class _HomePageState extends State<HomePage> {
         return Center(
           child: EmptyListWidget(
             title: 'No se encuentra al pokemon:',
-            subTitle: '${searchQuery}',
+            subTitle: searchQuery,
             image: 'assets/emptyImage.png',
             titleTextStyle: TextStyle(color: Colors.grey, fontSize: 24, fontWeight: FontWeight.bold),
             subtitleTextStyle: TextStyle(color: Colors.grey, fontSize:  20, fontWeight: FontWeight.bold),
