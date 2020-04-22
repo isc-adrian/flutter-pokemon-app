@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   bool _isSearching = false;
   String searchQuery = "";
 
+  bool offlineMode = false;
   List<Pokemon> pokemones = List<Pokemon>();
   List<Pokemon> pokemonesFiltered = List<Pokemon>();
 
@@ -35,18 +36,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   initialize() async{
-    /*io.Directory dir = io.Directory("/storage/emulated/0/pokemonApp");
-    dir.exists().then((exist) {
-      if(!exist){
-        dir.create(recursive: true);
-      }
-    });*/
-
     MyDataBase myDataBase = new MyDataBase();
     myDataBase.createDataBase();
   }
 
-  Future<bool> canConnectToInternet() async {
+  /*Future<bool> canConnectToInternet() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.mobile) {
       return true;
@@ -54,32 +48,30 @@ class _HomePageState extends State<HomePage> {
       return true;
     }
     return false;
-  }
+  }*/
 
   fetchData() async {
-    bool connectToInternet = await canConnectToInternet();
-    if(connectToInternet){
-      PokemonesService service = PokemonesService();
-      service.getPokemones().then((pokemonesFromService) => {
-        this.setState((){
-          pokemones = pokemonesFromService;
-          pokemonesFiltered = pokemones;
-          PokemonSource.saveAll(pokemones);
-        })
-      });
-    } else {
+    if(offlineMode){
       PokemonSource.getAll().then((pokemonList) {
         this.setState((){
           pokemones = pokemonList;
           pokemonesFiltered = pokemones;
         });
       });
+    } else {
+      PokemonesService service = PokemonesService();
+      service.getPokemones().then((pokemonesFromService) => {
+        this.setState((){
+          pokemones = pokemonesFromService;
+          pokemonesFiltered = pokemones;
+        })
+      });
     }
   }
 
   AppBar getAppBar(){
     return AppBar(
-      title: _isSearching ? _buildSearchField() : Text("Pokemon app"),
+      title: _isSearching ? _buildSearchField(): Text("Pokemon app"),
       backgroundColor: Colors.cyan,
       leading: _isSearching ? BackButton() : null,
       actions: _buildActions(),
@@ -114,6 +106,7 @@ class _HomePageState extends State<HomePage> {
             _clearSearchQuery();
           },
         ),
+
       ];
     }
 
@@ -122,7 +115,18 @@ class _HomePageState extends State<HomePage> {
         icon: const Icon(Icons.search),
         onPressed: _startSearch,
       ),
+      IconButton(
+        icon: getConnectionMode(),
+      ),
     ];
+  }
+
+  Widget getConnectionMode(){
+    if(offlineMode){
+      return Icon(Icons.signal_wifi_off, color: Colors.white,);
+    } else {
+      return Icon(Icons.signal_wifi_4_bar, color: Colors.white,);
+    }
   }
 
   void _startSearch() {
@@ -166,13 +170,16 @@ class _HomePageState extends State<HomePage> {
     return FloatingActionButton(
       child: Icon(Icons.refresh),
       backgroundColor: Colors.cyan,
-      onPressed: (){
-        pokemones = List<Pokemon>();
-        pokemonesFiltered = List<Pokemon>();
-        setState(() {});
-        fetchData();
-      },
+      onPressed: refreshPokemones,
     );
+  }
+
+  refreshPokemones(){
+    setState(() {
+      pokemones = List<Pokemon>();
+      pokemonesFiltered = List<Pokemon>();
+    });
+    fetchData();
   }
 
   Widget getBody(){
@@ -209,10 +216,50 @@ class _HomePageState extends State<HomePage> {
         });
   }
 
+  Widget getDawer(){
+    return Drawer(
+      child: ListView(
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/pikachu_perfil_avatar.jpg"),
+                fit: BoxFit.contain
+              ),
+            ),
+          ),
+          Text("Menú de opciones",
+            style: TextStyle(
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+
+          ),
+          SwitchListTile(
+            value: offlineMode,
+            onChanged: (activatedOfflineMode){
+              setState(() {
+                offlineMode = activatedOfflineMode;
+              });
+              if(activatedOfflineMode){
+                PokemonSource.saveAll(pokemones);
+              }
+              refreshPokemones();
+            },
+            title: Text("Activar modo offline"),
+            secondary: Icon(Icons.signal_wifi_off),
+          )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: getAppBar(),
+      drawer: getDawer(),
       body: getBody(),
       floatingActionButton: _isSearching ? null : getFloatingActionButtons(),
     );
